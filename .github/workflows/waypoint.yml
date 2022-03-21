@@ -39,9 +39,9 @@ jobs:
           waypoint config set -runner HARBORCRED=${{ secrets.HARBORREG }}
           set -x
           waypoint init
-          waypoint build -local=true
-          waypoint deploy
-          waypoint release
+          waypoint build -p example-nodejs3 -local=true
+          waypoint deploy -p example-nodejs3
+          waypoint release -p example-nodejs3
         env: # Or as an environment variable
           WAYPOINT_SERVER_TOKEN: ${{ secrets.WAYPOINTTOKEN }}
           WP_VAR_harborcred: ${{ secrets.HARBORREG }}
