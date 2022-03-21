@@ -1,6 +1,17 @@
-project = "example-nodejs"
+project = "example-nodejs3"
 
-app "example-nodejs" {
+runner {
+  enabled = true
+
+  data_source "git" {
+     url = "https://github.com/idjohnson/waypoint-examples.git"
+     ref = "main"
+     path = "kubernetes/nodejs"
+  }
+}
+
+app "example-nodejs3" {
+
   labels = {
     "service" = "example-nodejs",
     "env"     = "dev"
@@ -10,15 +21,16 @@ app "example-nodejs" {
     use "pack" {}
     registry {
       use "docker" {
-        image = "example-nodejs"
-        tag   = "1"
-        local = true
+        image = "harbor.freshbrewed.science/freshbrewedprivate/example-nodejs"
+        tag   = gitrefpretty()
+        encoded_auth = var.harborcred
       }
     }
   }
 
   deploy {
     use "kubernetes" {
+      image_secret = "myharborreg"
       probe_path = "/"
     }
   }
@@ -30,4 +42,9 @@ app "example-nodejs" {
       port          = 3000
     }
   }
+}
+
+variable "harborcred" {
+  type    = string
+  default = null
 }

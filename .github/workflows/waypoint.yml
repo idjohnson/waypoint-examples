@@ -1,0 +1,47 @@
+name: GitHub To Waypoint
+
+on: [pull_request, push] 
+
+env:
+  WAYPOINT_VERSION: '0.7.2'
+  WAYPOINT_SERVER_ADDR: '73.242.50.46:9701'
+  WAYPOINT_SERVER_TLS: '1'
+  WAYPOINT_SERVER_TLS_SKIP_VERIFY: '1'
+
+jobs:
+  HostedActions:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "🎉 The job was automatically triggered by a $ event."
+      - run: echo "🐧 This job is now running on a $ server hosted by GitHub!"
+      - run: echo "🔎 The name of your branch is $ and your repository is $."
+      - name: Check out repository code
+        uses: actions/checkout@v2
+      - run: echo "💡 The $ repository has been cloned to the runner."
+      - run: echo "🖥️ The workflow is now ready to test your code on the runner."
+      - name: install waypoint
+        run: |
+          wget -q -O /tmp/waypoint.zip https://releases.hashicorp.com/waypoint/${{env.WAYPOINT_VERSION}}/waypoint_${{env.WAYPOINT_VERSION}}_linux_amd64.zip
+          unzip -d /usr/local/bin /tmp/waypoint.zip
+          rm -rf /tmp/waypoint*
+      - name: set kubernetes config
+        run: |
+          mkdir -p ~/.kube
+          set +x
+          echo ${{ secrets.MYK8SENV }} | base64 --decode > ~/.kube/config
+      - name: install waypoint
+        run: |
+          # go to src dir
+          cd kubernetes/nodejs 
+          # sed -i "s/encoded_auth =.*/encoded_auth = \"${{ secrets.HARBORREG }}\"/g" waypoint.hcl
+          set +x
+          waypoint config set HARBORCRED=${{ secrets.HARBORREG }}
+          waypoint config set -runner HARBORCRED=${{ secrets.HARBORREG }}
+          set -x
+          waypoint init
+          waypoint build -local=true
+          waypoint deploy
+          waypoint release
+        env: # Or as an environment variable
+          WAYPOINT_SERVER_TOKEN: ${{ secrets.WAYPOINTTOKEN }}
+          WP_VAR_harborcred: ${{ secrets.HARBORREG }}
